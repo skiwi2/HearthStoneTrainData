@@ -1,4 +1,5 @@
 import groovy.json.JsonSlurper
+import sun.nio.cs.UTF_8
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -10,7 +11,7 @@ import java.nio.file.StandardOpenOption
  * @author Frank van Heeswijk
  */
 class Main {
-    static String cardDataUrl = "http://hearthstonejson.com/json/AllSets.json"
+    static String cardDataUrl = "https://api.hearthstonejson.com/v1/latest/enUS/cards.json"
     static Path targetPath = Paths.get(System.getProperty("user.home"), "HearthStoneTrainData", "data.txt")
     static long targetFileSize = 1024L * 1024L
 
@@ -19,8 +20,10 @@ class Main {
     }
 
     static Object retrieveCardData() {
-        JsonSlurper jsonSlurper = new JsonSlurper()
-        jsonSlurper.parse(new URL(cardDataUrl), StandardCharsets.UTF_8.name())
+        def jsonSlurper = new JsonSlurper()
+        def connection = (HttpURLConnection)new URL(cardDataUrl).openConnection()
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0")    // I'm not a bot
+        jsonSlurper.parse(connection.inputStream, StandardCharsets.UTF_8.name())
     }
 
     static Map<String, List> splitIntoSets(Object cardsJson) {
