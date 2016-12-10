@@ -52,6 +52,13 @@ class Main {
         def collectionText = cardJson.collectionText ?: ""
         def text = collectionText ?: originalText
         def set = cardJson.set
+
+        cost = convertResource(cost ?: 0)
+        attack = convertResource(attack ?: 0)
+        health = convertResource(health ?: 0)
+        durability = convertResource(durability ?: 0)
+        text = convertText(text)
+
         switch (type) {
             case "MINION":
                 return formatOneLiner(cost, type, attack, health, rarity, playerClass, race, text, name, set)
@@ -70,8 +77,56 @@ class Main {
         }
     }
 
+    static String convertResource(Integer resource) {
+        "{" + "X".multiply(resource) + "}"
+    }
+
+    static String convertText(String text) {
+        def sb = new StringBuilder()
+        def digits = ""
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i)
+            if (!digits && ch == (char)'-') {
+                digits = '-'
+            }
+            if (Character.isDigit(ch)) {
+                digits += ch
+            }
+            else {
+                if (digits) {
+                    if (digits == '-') {
+                        sb.append('-')
+                    }
+                    else {
+                        sb.append(convertTextResource(digits.toInteger()))
+                    }
+                    digits = ""
+                }
+                sb.append(ch)
+            }
+        }
+        if (digits) {
+            if (digits == '-') {
+                sb.append('-')
+            }
+            else {
+                sb.append(convertTextResource(digits.toInteger()))
+            }
+        }
+        sb.toString()
+    }
+
+    static String convertTextResource(Integer resource) {
+        if (resource >= 0) {
+            "{^" + "&".multiply(resource.toInteger()) + "}"
+        }
+        else {
+            "{^" + "&-".multiply(-resource.toInteger()) + "}"
+        }
+    }
+
     static String formatOneLiner(Object... arguments) {
-        return String.join(" | ", arguments.collect { it.toString() })
+        String.join(" | ", arguments.collect { it.toString() })
     }
 
     static void saveToTargetFile(List<String> cardOneLiners) {
