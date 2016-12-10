@@ -54,20 +54,24 @@ class Main {
         def set = cardJson.set
         switch (type) {
             case "MINION":
-                return "${text} | ${cost} | ${attack}/${health} | ${name} | ${race} | ${playerClass} | ${rarity} | ${type} | ${set}"
+                return formatOneLiner(cost, type, attack, health, rarity, playerClass, race, text, name, set)
             case "SPELL":
-                return "${text} | ${cost} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
+                return formatOneLiner(cost, type, rarity, playerClass, text, name, set)
             case "ENCHANTMENT":
-                return "${text} | ${playerClass} | ${type} | ${set}"
+                return formatOneLiner(type, playerClass, text, set)
             case "WEAPON":
-                return "${text} | ${attack}/${durability} | ${cost} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
+                return formatOneLiner(cost, type, attack, durability, rarity, playerClass, text, name, set)
             case "HERO":
-                return "${health} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
+                return formatOneLiner(type, health, rarity, playerClass, name, set)
             case "HERO POWER":
-                return "${text} | ${cost} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
+                return formatOneLiner(cost, type, rarity, playerClass, text, name, set)
             default:
                 throw new IllegalArgumentException("Unknown type: ${type} in ${cardJson}")
         }
+    }
+
+    static String formatOneLiner(Object... arguments) {
+        return String.join(" | ", arguments.collect { it.toString() })
     }
 
     static void saveToTargetFile(List<String> cardOneLiners) {
