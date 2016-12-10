@@ -11,12 +11,12 @@ import java.nio.file.StandardOpenOption
  * @author Frank van Heeswijk
  */
 class Main {
-    static String cardDataUrl = "https://api.hearthstonejson.com/v1/latest/enUS/cards.json"
+    static String cardDataUrl = "https://api.hearthstonejson.com/v1/latest/enUS/cards.collectible.json"
     static Path targetPath = Paths.get(System.getProperty("user.home"), "HearthStoneTrainData", "data.txt")
     static long targetFileSize = 1024L * 1024L
 
     static void main(String[] args) {
-        saveToTargetFile(convertToOneLiners(splitIntoSets(retrieveCardData())))
+        saveToTargetFile(convertToOneLiners(retrieveCardData()))
     }
 
     static Object retrieveCardData() {
@@ -26,45 +26,44 @@ class Main {
         jsonSlurper.parse(connection.inputStream, StandardCharsets.UTF_8.name())
     }
 
-    static Map<String, List> splitIntoSets(Object cardsJson) {
-        cardsJson.collectEntries { it }
-    }
-
-    static List<String> convertToOneLiners(Map<String, List> cardsBySet) {
+    static List<String> convertToOneLiners(List<Object> cards) {
         def list = []
-        cardsBySet.each { set, cards ->
-            cards.each { card ->
-                if (card.collectible) {
-                    list.add(convertToOneLiner(set, card))
-                }
+        cards.each { card ->
+            if (card.collectible) {
+                list.add(convertToOneLiner(card))
             }
         }
         list
     }
 
-    static String convertToOneLiner(String set, Object cardJson) {
+    static String convertToOneLiner(Object cardJson) {
         def type = cardJson.type
         def rarity = cardJson.rarity ?: "Token"
         def race = cardJson.race ?: "None"
-        def playerClass = cardJson.playerClass ?: "Neutral"
+        def originalPlayerClass = cardJson.playerClass ?: "Neutral"
+        def classes = cardJson.classes ?: []
+        def playerClass = (classes ?: [originalPlayerClass]).join(" ")
         def name = cardJson.name
         def cost = cardJson.cost
         def attack = cardJson.attack
         def health = cardJson.health
         def durability = cardJson.durability
-        def text = cardJson.text ?: ""
+        def originalText = cardJson.text ?: ""
+        def collectionText = cardJson.collectionText ?: ""
+        def text = collectionText ?: originalText
+        def set = cardJson.set
         switch (type) {
-            case "Minion":
+            case "MINION":
                 return "${text} | ${cost} | ${attack}/${health} | ${name} | ${race} | ${playerClass} | ${rarity} | ${type} | ${set}"
-            case "Spell":
+            case "SPELL":
                 return "${text} | ${cost} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
-            case "Enchantment":
+            case "ENCHANTMENT":
                 return "${text} | ${playerClass} | ${type} | ${set}"
-            case "Weapon":
+            case "WEAPON":
                 return "${text} | ${attack}/${durability} | ${cost} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
-            case "Hero":
+            case "HERO":
                 return "${health} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
-            case "Hero Power":
+            case "HERO POWER":
                 return "${text} | ${cost} | ${name} | ${playerClass} | ${rarity} | ${type} | ${set}"
             default:
                 throw new IllegalArgumentException("Unknown type: ${type} in ${cardJson}")
@@ -82,6 +81,7 @@ class Main {
                 Collections.shuffle(copyCardOneLiners)
                 copyCardOneLiners.each { line ->
                     writer.append(line)
+                    writer.newLine()
                     writer.newLine()
                 }
             }
