@@ -86,43 +86,25 @@ class Main {
         def digits = ""
         for (int i = 0; i < text.length(); i++) {
             char ch = text.charAt(i)
-            if (!digits && ch == (char)'-') {
-                digits = '-'
-            }
             if (Character.isDigit(ch)) {
                 digits += ch
             }
             else {
                 if (digits) {
-                    if (digits == '-') {
-                        sb.append('-')
-                    }
-                    else {
-                        sb.append(convertTextResource(digits.toInteger()))
-                    }
+                    sb.append(convertTextResource(digits.toInteger()))
                     digits = ""
                 }
                 sb.append(ch)
             }
         }
         if (digits) {
-            if (digits == '-') {
-                sb.append('-')
-            }
-            else {
-                sb.append(convertTextResource(digits.toInteger()))
-            }
+            sb.append(convertTextResource(digits.toInteger()))
         }
         sb.toString()
     }
 
     static String convertTextResource(Integer resource) {
-        if (resource >= 0) {
-            "{^" + "&".multiply(resource.toInteger()) + "}"
-        }
-        else {
-            "{^" + "&-".multiply(-resource.toInteger()) + "}"
-        }
+        "{^" + "&".multiply(resource.toInteger()) + "}"
     }
 
     static String formatOneLiner(Object... arguments) {
